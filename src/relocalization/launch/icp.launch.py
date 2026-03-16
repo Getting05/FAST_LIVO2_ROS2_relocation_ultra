@@ -28,7 +28,7 @@ def generate_launch_description():
                 {'solver_max_iter':75},
                 {'max_correspondence_distance':0.1},
                 {'RANSAC_outlier_rejection_threshold':1.0},
-                {'map_path':'/home/getting/humble/FAST-LIVO2-ROS2-v3/all_raw_points.pcd'},# 全局地图路径
+                {'map_path':'/home/getting/Desktop/FASTLIVO2Relocation/FAST_LIVO2_ROS2_relocation_ultra/all_raw_points.pcd'},# 全局地图路径
                 {'fitness_score_thre':0.1}, # 是最近点距离的平均值，越小越严格
                 {'converged_count_thre':50},
                 {'pcl_type':'livox'},

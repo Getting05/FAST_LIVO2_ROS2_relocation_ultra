@@ -43,7 +43,7 @@ def generate_launch_description():
           {'RANSAC_outlier_rejection_threshold': 0.5},
           
           # 请务必确认这个 PCD 路径是正确的
-          {'map_path': '/home/getting/humble/FAST_LIVO2_ROS2_relocation_edit/all_raw_points.pcd'},
+          {'map_path': '/home/getting/Desktop/FASTLIVO2Relocation/FAST_LIVO2_ROS2_relocation_ultra/all_raw_points.pcd'},
           
           {'fitness_score_thre': 0.2},
           {'converged_count_thre': 20}, 

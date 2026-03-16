@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     locate_in_prior_map: true
-    prior_map_path: "/home/getting/humble/FAST_LIVO2_ROS2_relocation_edit/all_raw_points.pcd"
+    prior_map_path: "/home/getting/Desktop/FASTLIVO2Relocation/FAST_LIVO2_ROS2_relocation_ultra/all_raw_points.pcd"
     
     common:
       img_topic: "/left_camera/image"
@@ -82,7 +82,7 @@
       pose_output_en: false
 
     pcd_save:
-      pcd_save_en: true
+      pcd_save_en: false
       colmap_output_en: false # need to set interval = -1
       filter_size_pcd: 0.15
       interval: -1

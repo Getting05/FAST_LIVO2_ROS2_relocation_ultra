@@ -12,6 +12,7 @@ which is included as part of this source code package.
 
 #include "LIVMapper.h"
 #include <vikit/camera_loader.h>
+#include <tf2/exceptions.h>
 
 using namespace Sophus;
 
@@ -53,6 +54,8 @@ LIVMapper::LIVMapper(rclcpp::Node::SharedPtr &node, std::string node_name, const
   initializeComponents(this->node);          // initialize components errors
   path.header.stamp = this->node->now();
   path.header.frame_id = "camera_init"; // world frame 可根据需要更改
+  tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->node->get_clock());
+  tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 }
 
 LIVMapper::~LIVMapper() {}
@@ -131,6 +134,7 @@ void LIVMapper::readParameters(rclcpp::Node::SharedPtr &node)
   try_declare.template operator()<int>("publish.pub_scan_num", 1);
   try_declare.template operator()<bool>("publish.pub_effect_point_en", false);
   try_declare.template operator()<bool>("publish.dense_map_en", false);
+  try_declare.template operator()<std::string>("publish.map_frame_id", "map");
 
   try_declare.template operator()<bool>("locate_in_prior_map", false);//『GT』
   try_declare.template operator()<string>("prior_map_path", "");//『GT』
@@ -193,6 +197,7 @@ void LIVMapper::readParameters(rclcpp::Node::SharedPtr &node)
   this->node->get_parameter("publish.pub_scan_num", pub_scan_num);
   this->node->get_parameter("publish.pub_effect_point_en", pub_effect_point_en);
   this->node->get_parameter("publish.dense_map_en", dense_map_en);
+  this->node->get_parameter("publish.map_frame_id", map_frame_id_);
 
   this->node->get_parameter("locate_in_prior_map", locate_in_prior_map);//『GT』
   this->node->get_parameter("prior_map_path", prior_map_path); //『GT』
@@ -301,6 +306,7 @@ void LIVMapper::initializeSubscribersAndPublishers(rclcpp::Node::SharedPtr &node
   pubLaserCloudEffect = this->node->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_effected", 100);
   pubLaserCloudMap = this->node->create_publisher<sensor_msgs::msg::PointCloud2>("/Laser_map", 100);
   pubOdomAftMapped = this->node->create_publisher<nav_msgs::msg::Odometry>("/aft_mapped_to_init", 10);
+  pubOdomAftMappedInMap = this->node->create_publisher<nav_msgs::msg::Odometry>("/aft_mapped_in_map", 10);
   pubPath = this->node->create_publisher<nav_msgs::msg::Path>("/path", 10);
   plane_pub = this->node->create_publisher<visualization_msgs::msg::Marker>("/planner_normal", 1);
   voxel_pub = this->node->create_publisher<visualization_msgs::msg::MarkerArray>("/voxels", 1);
@@ -1589,6 +1595,51 @@ void LIVMapper::publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry
   transform.setRotation(q);
   br->sendTransform(geometry_msgs::msg::TransformStamped(createTransformStamped(transform, odomAftMapped.header.stamp, "camera_init", "aft_mapped")));
   pubOdomAftMapped->publish(odomAftMapped);
+
+  if (!tf_buffer_ || !pubOdomAftMappedInMap) {
+    return;
+  }
+
+  try
+  {
+    const auto map_to_camera_msg = tf_buffer_->lookupTransform(map_frame_id_, "camera_init", tf2::TimePointZero);
+
+    tf2::Transform map_to_camera;
+    tf2::Quaternion q_map_to_camera(
+      map_to_camera_msg.transform.rotation.x,
+      map_to_camera_msg.transform.rotation.y,
+      map_to_camera_msg.transform.rotation.z,
+      map_to_camera_msg.transform.rotation.w);
+    q_map_to_camera.normalize();
+    map_to_camera.setOrigin(tf2::Vector3(
+      map_to_camera_msg.transform.translation.x,
+      map_to_camera_msg.transform.translation.y,
+      map_to_camera_msg.transform.translation.z));
+    map_to_camera.setRotation(q_map_to_camera);
+
+    const tf2::Transform map_to_aft = map_to_camera * transform;
+
+    odomAftMappedInMap = odomAftMapped;
+    odomAftMappedInMap.header.frame_id = map_frame_id_;
+    odomAftMappedInMap.pose.pose.position.x = map_to_aft.getOrigin().x();
+    odomAftMappedInMap.pose.pose.position.y = map_to_aft.getOrigin().y();
+    odomAftMappedInMap.pose.pose.position.z = map_to_aft.getOrigin().z();
+    odomAftMappedInMap.pose.pose.orientation.x = map_to_aft.getRotation().x();
+    odomAftMappedInMap.pose.pose.orientation.y = map_to_aft.getRotation().y();
+    odomAftMappedInMap.pose.pose.orientation.z = map_to_aft.getRotation().z();
+    odomAftMappedInMap.pose.pose.orientation.w = map_to_aft.getRotation().w();
+
+    pubOdomAftMappedInMap->publish(odomAftMappedInMap);
+  }
+  catch (const tf2::TransformException &ex)
+  {
+    RCLCPP_WARN_THROTTLE(
+      this->node->get_logger(),
+      *this->node->get_clock(),
+      5000,
+      "No map->camera_init TF yet, skip publishing /aft_mapped_in_map: %s",
+      ex.what());
+  }
 }
 
 void LIVMapper::publish_mavros(const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr &mavros_pose_publisher)

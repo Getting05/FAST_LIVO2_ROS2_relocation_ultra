@@ -13,10 +13,10 @@ public:
     TransformPublisherNode()
         : Node("transform_publisher_node")
     {
-        this->declare_parameter<std::string>("odom_frame_id","odom");
+        this->declare_parameter<std::string>("odom_frame_id","camera_init");
         this->declare_parameter<std::string>("map_frame_id","map");
 
-        this->get_parameter_or<std::string>("odom_frame_id", odom_frame_id, "odom");
+        this->get_parameter_or<std::string>("odom_frame_id", odom_frame_id, "camera_init");
         this->get_parameter_or<std::string>("map_frame_id", map_frame_id, "map");
         subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
             "icp_result", 10, std::bind(&TransformPublisherNode::callback, this, std::placeholders::_1));

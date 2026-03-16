@@ -23,6 +23,8 @@ which is included as part of this source code package.
 #endif
 #include <image_transport/image_transport.hpp>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <nav_msgs/msg/path.hpp>
 #include <vikit/camera_loader.h>
@@ -194,6 +196,7 @@ public:
 
   nav_msgs::msg::Path path;
   nav_msgs::msg::Odometry odomAftMapped;
+  nav_msgs::msg::Odometry odomAftMappedInMap;
   geometry_msgs::msg::Quaternion geoQuat;
   geometry_msgs::msg::PoseStamped msg_body_pose;
 
@@ -215,6 +218,7 @@ public:
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudEffect;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudMap;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMappedInMap;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudDyn;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudDynRmed;
@@ -223,6 +227,9 @@ public:
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr mavros_pose_publisher;
   rclcpp::TimerBase::SharedPtr imu_prop_timer;
   rclcpp::Node::SharedPtr node;
+  std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+  std::string map_frame_id_ = "map";
 
   int frame_num = 0;
   double aver_time_consu = 0;

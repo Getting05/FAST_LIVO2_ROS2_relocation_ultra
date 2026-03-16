@@ -23,7 +23,7 @@ def generate_launch_description():
                 # === 地图与降采样配置 ===
                 {'map_frame_id': 'map'},
                 # 请务必修改为你实际的点云地图路径
-                {'map_path': '/home/getting/humble/FAST-LIVO2-ROS2-v3/all_raw_points.pcd'}, 
+                {'map_path': '/home/getting/Desktop/FASTLIVO2Relocation/FAST_LIVO2_ROS2_relocation_ultra/all_raw_points.pcd'}, 
                 # 地图降采样 (TEASER++ 计算 FPFH 非常耗时，建议设大一点，例如 0.3 或 0.5)
                 {'map_voxel_leaf_size': 0.3},   
                 # 实时雷达点云降采样

@@ -29,7 +29,7 @@ def generate_launch_description():
         output='screen',
         parameters=[
             # ====== 基础配置 ======
-            {'map_path': '/home/getting/humble/FAST_LIVO2_ROS2_relocation_edit/all_raw_points.pcd'},
+            {'map_path': '/home/getting/Desktop/FASTLIVO2Relocation/FAST_LIVO2_ROS2_relocation_ultra/all_raw_points.pcd'},
             {'map_frame_id': 'map'},
             {'pcl_type': 'livox'},
 
@@ -63,11 +63,14 @@ def generate_launch_description():
     # 3. FAST-LIVO 定位模式
     fast_livo_param = os.path.join(
         config_path, 'avia_relocation.yaml')
+    camera_param = os.path.join(
+        config_path, 'camera_pinhole.yaml')
     fast_livo_node = Node(
         package='fast_livo',
         executable='fastlivo_mapping',
         parameters=[
-            fast_livo_param
+            fast_livo_param,
+            camera_param
         ],
         output='screen',
         remappings=[('/Odometry', '/state_estimation')]

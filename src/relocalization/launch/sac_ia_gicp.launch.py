@@ -16,7 +16,7 @@ def generate_launch_description():
         executable='sac_ia_gicp',
         name='sac_ia_gicp_node',
         parameters=[
-            {'target_pcd_file': "/home/getting/humble/FAST-LIVO2-ROS2-v3/all_raw_points.pcd"},
+            {'target_pcd_file': "/home/getting/Desktop/FASTLIVO2Relocation/FAST_LIVO2_ROS2_relocation_ultra/all_raw_points.pcd"},
             {'num_threads': 8},
             {'k_serach_source': 100},
             {'k_serach_target': 100},
