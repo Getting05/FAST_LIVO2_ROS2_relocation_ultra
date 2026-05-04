@@ -121,6 +121,27 @@ if(USE_LIVOX)
   ament_target_dependencies(teaser_gicp_node livox_ros_driver2)
 endif()
 
+add_executable(map_teaser_gicp_node src/map_teaser_gicp_node.cpp)
+ament_target_dependencies(map_teaser_gicp_node
+  rclcpp
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  tf2
+  tf2_ros
+  tf2_geometry_msgs
+  pcl_ros
+  Eigen3
+)
+target_link_libraries(map_teaser_gicp_node
+  teaserpp::teaser_registration
+  teaserpp::teaser_features
+  teaserpp::teaser_io
+  small_gicp::small_gicp
+  OpenMP::OpenMP_CXX
+  ${PCL_LIBRARIES}
+)
+
 
 
 # Install launch files
@@ -135,7 +156,7 @@ install(
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(TARGETS teaser_node teaser_gicp_node
+install(TARGETS teaser_node teaser_gicp_node map_teaser_gicp_node
   DESTINATION lib/${PROJECT_NAME}
 )
 ament_package()
