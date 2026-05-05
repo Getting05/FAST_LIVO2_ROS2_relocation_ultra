@@ -308,6 +308,8 @@ void LIVMapper::initializeSubscribersAndPublishers(rclcpp::Node::SharedPtr &node
   pubOdomAftMapped = this->node->create_publisher<nav_msgs::msg::Odometry>("/aft_mapped_to_init", 10);
   pubOdomAftMappedInMap = this->node->create_publisher<nav_msgs::msg::Odometry>("/aft_mapped_in_map", 10);
   pubPath = this->node->create_publisher<nav_msgs::msg::Path>("/path", 10);
+  pubState6 = this->node->create_publisher<std_msgs::msg::Float32MultiArray>("/fast_livo2/state6", 50);
+  pubState6ImuProp = this->node->create_publisher<std_msgs::msg::Float32MultiArray>("/fast_livo2/state6_imu_prop", 200);
   plane_pub = this->node->create_publisher<visualization_msgs::msg::Marker>("/planner_normal", 1);
   voxel_pub = this->node->create_publisher<visualization_msgs::msg::MarkerArray>("/voxels", 1);
   pubLaserCloudDyn = this->node->create_publisher<sensor_msgs::msg::PointCloud2>("/dyn_obj", 100);
@@ -456,6 +458,8 @@ void LIVMapper::handleVIO()
   fout_out << std::setw(20) << LidarMeasures.last_lio_update_time - _first_lidar_time << " " << euler_cur.transpose() * 57.3 << " "
             << _state.pos_end.transpose() << " " << _state.vel_end.transpose() << " " << _state.bias_g.transpose() << " "
             << _state.bias_a.transpose() << " " << V3D(_state.inv_expo_time, 0, 0).transpose() << " " << feats_undistort->points.size() << std::endl;
+
+  publish_state6(pubState6, _state.rot_end, p_imu->unbiased_gyr);
 }
 
 void LIVMapper::handleLIO() 
@@ -633,6 +637,7 @@ void LIVMapper::handleLIO()
   //=======================发布里程计与更新体素地图============================//
   euler_cur = RotMtoEuler(_state.rot_end);
   geoQuat = tf::createQuaternionMsgFromRollPitchYaw(euler_cur(0), euler_cur(1), euler_cur(2));//把当前旋转转换为欧拉角，再转换为四元数消息格式。
+  publish_state6(pubState6, _state.rot_end, p_imu->unbiased_gyr);
   publish_odometry(pubOdomAftMapped);//发布里程计消息，包含当前位姿与速度信息。
 
 
@@ -900,6 +905,10 @@ void LIVMapper::imu_prop_callback()
     imu_prop_odom.twist.twist.linear.y = vel_i.y();
     imu_prop_odom.twist.twist.linear.z = vel_i.z();
     pubImuPropOdom->publish(imu_prop_odom);
+
+    V3D ang_vel_body(newest_imu.angular_velocity.x, newest_imu.angular_velocity.y, newest_imu.angular_velocity.z);
+    ang_vel_body -= imu_propagate.bias_g;
+    publish_state6(pubState6ImuProp, imu_propagate.rot_end, ang_vel_body);
   }
   mtx_buffer_imu_prop.unlock();
 }
@@ -1563,6 +1572,26 @@ void LIVMapper::publish_effect_world(const rclcpp::Publisher<sensor_msgs::msg::P
   laserCloudFullRes3.header.stamp = this->node->get_clock()->now();
   laserCloudFullRes3.header.frame_id = "camera_init";
   pubLaserCloudEffect->publish(laserCloudFullRes3);
+}
+
+void LIVMapper::publish_state6(const rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr &pubState6,
+                               const M3D &rot_end,
+                               const V3D &base_ang_vel)
+{
+  if (!pubState6) return;
+
+  const V3D gravity_world(0.0, 0.0, -1.0);
+  const V3D projected_gravity = rot_end.transpose() * gravity_world;
+
+  std_msgs::msg::Float32MultiArray msg;
+  msg.data.resize(6);
+  msg.data[0] = static_cast<float>(base_ang_vel(0));
+  msg.data[1] = static_cast<float>(base_ang_vel(1));
+  msg.data[2] = static_cast<float>(base_ang_vel(2));
+  msg.data[3] = static_cast<float>(projected_gravity(0));
+  msg.data[4] = static_cast<float>(projected_gravity(1));
+  msg.data[5] = static_cast<float>(projected_gravity(2));
+  pubState6->publish(msg);
 }
 
 template <typename T> void LIVMapper::set_posestamp(T &out)

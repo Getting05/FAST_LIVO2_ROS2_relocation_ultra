@@ -27,6 +27,7 @@ ImuProcess::ImuProcess() : Eye3d(M3D::Identity()),
   mean_acc = V3D(0, 0, -1.0);
   mean_gyr = V3D(0, 0, 0);
   angvel_last = Zero3d;
+  unbiased_gyr = Zero3d;
   acc_s_last = Zero3d;
   Lid_offset_to_IMU = Zero3d;
   Lid_rot_to_IMU = Eye3d;
@@ -42,6 +43,7 @@ void ImuProcess::Reset()
   mean_acc = V3D(0, 0, -1.0);
   mean_gyr = V3D(0, 0, 0);
   angvel_last = Zero3d;
+  unbiased_gyr = Zero3d;
   imu_need_init = true;
   init_iter_num = 1;
   IMUpose.clear();
@@ -352,6 +354,7 @@ void ImuProcess::UndistortPcl(LidarMeasureGroup &lidar_meas, StatesGroup &state_
       // imu_time = stamp2Sec(head->header.stamp) - first_lidar_time;
 
       angvel_avr -= state_inout.bias_g;
+      unbiased_gyr = angvel_avr;
       acc_avr = acc_avr * G_m_s2 / mean_acc.norm() - state_inout.bias_a;
 
       if (stamp2Sec(head->header.stamp) < prop_beg_time)

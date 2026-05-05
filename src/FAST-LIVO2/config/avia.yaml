@@ -64,7 +64,7 @@
       sliding_thresh: 8.0
 
     uav:
-      imu_rate_odom: false
+      imu_rate_odom: true
       gravity_align_en: true
 
     publish:

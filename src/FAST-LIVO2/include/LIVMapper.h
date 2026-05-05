@@ -27,6 +27,7 @@ which is included as part of this source code package.
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <nav_msgs/msg/path.hpp>
+#include <std_msgs/msg/float32_multi_array.hpp>
 #include <vikit/camera_loader.h>
 
 /*『GT』*/
@@ -85,6 +86,9 @@ public:
   void publish_frame_world(const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr &pubLaserCloudFullRes, VIOManagerPtr vio_manager);
   void publish_visual_sub_map(const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr &pubSubVisualMap);
   void publish_effect_world(const rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr &pubLaserCloudEffect, const std::vector<PointToPlane> &ptpl_list);
+  void publish_state6(const rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr &pubState6,
+                      const M3D &rot_end,
+                      const V3D &base_ang_vel);
   void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr &pmavros_pose_publisherubOdomAftMapped);
   void publish_mavros(const rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr &mavros_pose_publisher);
   void publish_path(const rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr &pubPath);
@@ -220,6 +224,8 @@ public:
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped;
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMappedInMap;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath;
+  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr pubState6;
+  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr pubState6ImuProp;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudDyn;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudDynRmed;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudDynDbg;
