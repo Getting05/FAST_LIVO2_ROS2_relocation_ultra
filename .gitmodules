@@ -1,0 +1,8 @@
+[submodule "src/TEASER-plusplus"]
+	path = src/TEASER-plusplus
+	url = https://github.com/MIT-SPARK/TEASER-plusplus.git
+	ignore = untracked
+[submodule "src/small_gicp"]
+	path = src/small_gicp
+	url = https://github.com/koide3/small_gicp.git
+	ignore = untracked
